@@ -22,7 +22,17 @@ export function initFirebase(): {
       const rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY;
 
       if (serviceAccountJson && serviceAccountJson.trim().startsWith('{')) {
-        const parsed = JSON.parse(serviceAccountJson);
+        let parsed: Record<string, string>;
+        try {
+          parsed = JSON.parse(serviceAccountJson);
+        } catch {
+          const sanitized = serviceAccountJson
+            .trim()
+            .replace(/\r\n/g, '\\n')
+            .replace(/\n/g, '\\n')
+            .replace(/\r/g, '\\n');
+          parsed = JSON.parse(sanitized);
+        }
         if (parsed.private_key) {
           parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
         }
