@@ -6,11 +6,25 @@ dotenv.config();
 let firestoreInstance: admin.firestore.Firestore | null = null;
 let initializationError: string | null = null;
 
-function parseServiceAccountFromEnv(raw: string): {
+function parseServiceAccountFromEnv(rawInput: string): {
   projectId: string;
   clientEmail: string;
   privateKey: string;
 } | null {
+  let raw = rawInput.trim();
+
+  // Si viene codificado en Base64 (sin llaves al inicio), lo decodifica primero
+  if (!raw.startsWith('{')) {
+    try {
+      const decoded = Buffer.from(raw, 'base64').toString('utf8');
+      if (decoded.trim().startsWith('{')) {
+        raw = decoded.trim();
+      }
+    } catch {
+      // Continúa con el valor original
+    }
+  }
+
   try {
     const parsed = JSON.parse(raw);
     if (parsed.project_id && parsed.client_email && parsed.private_key) {
@@ -21,17 +35,22 @@ function parseServiceAccountFromEnv(raw: string): {
       };
     }
   } catch {
-    // Fallback tolerante si Render convierte \n en saltos de línea reales dentro del JSON
     const pidMatch = raw.match(/"project_id"\s*:\s*"([^"]+)"/);
     const emailMatch = raw.match(/"client_email"\s*:\s*"([^"]+)"/);
     const keyMatch = raw.match(
       /-----BEGIN PRIVATE KEY-----[\s\S]+?-----END PRIVATE KEY-----/
     );
 
-    if (pidMatch && emailMatch && keyMatch) {
+    if (keyMatch) {
       return {
-        projectId: pidMatch[1].trim(),
-        clientEmail: emailMatch[1].trim(),
+        projectId:
+          pidMatch?.[1]?.trim() ||
+          process.env.FIREBASE_PROJECT_ID ||
+          'minipro2-d08ef',
+        clientEmail:
+          emailMatch?.[1]?.trim() ||
+          process.env.FIREBASE_CLIENT_EMAIL ||
+          'firebase-adminsdk-fbsvc@minipro2-d08ef.iam.gserviceaccount.com',
         privateKey: keyMatch[0].replace(/\\n/g, '\n') + '\n',
       };
     }
@@ -85,7 +104,7 @@ export function initFirebase(): {
         });
       } else {
         initializationError =
-          'Credenciales de Firebase Admin no configuradas. Define FIREBASE_SERVICE_ACCOUNT_JSON en las variables de entorno del backend-api.';
+          'Credenciales de Firebase Admin incompletas en Render. Reemplaza el valor de FIREBASE_SERVICE_ACCOUNT_JSON en Render Environment con la cadena Base64 de una sola línea.';
         return { db: null, error: initializationError };
       }
     }
