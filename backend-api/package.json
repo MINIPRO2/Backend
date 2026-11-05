@@ -1,0 +1,27 @@
+{
+  "name": "studyroom-backend-api",
+  "version": "1.0.0",
+  "description": "Backend API principal (Node.js + TypeScript + Express + Firestore + Swagger) para Salón de Estudio Colaborativo",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.4.0",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.10",
+    "@types/swagger-ui-express": "^4.1.6",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
+  }
+}
