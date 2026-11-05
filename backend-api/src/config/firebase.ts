@@ -6,6 +6,39 @@ dotenv.config();
 let firestoreInstance: admin.firestore.Firestore | null = null;
 let initializationError: string | null = null;
 
+function parseServiceAccountFromEnv(raw: string): {
+  projectId: string;
+  clientEmail: string;
+  privateKey: string;
+} | null {
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed.project_id && parsed.client_email && parsed.private_key) {
+      return {
+        projectId: parsed.project_id,
+        clientEmail: parsed.client_email,
+        privateKey: String(parsed.private_key).replace(/\\n/g, '\n'),
+      };
+    }
+  } catch {
+    // Fallback tolerante si Render convierte \n en saltos de línea reales dentro del JSON
+    const pidMatch = raw.match(/"project_id"\s*:\s*"([^"]+)"/);
+    const emailMatch = raw.match(/"client_email"\s*:\s*"([^"]+)"/);
+    const keyMatch = raw.match(
+      /-----BEGIN PRIVATE KEY-----[\s\S]+?-----END PRIVATE KEY-----/
+    );
+
+    if (pidMatch && emailMatch && keyMatch) {
+      return {
+        projectId: pidMatch[1].trim(),
+        clientEmail: emailMatch[1].trim(),
+        privateKey: keyMatch[0].replace(/\\n/g, '\n') + '\n',
+      };
+    }
+  }
+  return null;
+}
+
 export function initFirebase(): {
   db: admin.firestore.Firestore | null;
   error: string | null;
@@ -21,23 +54,17 @@ export function initFirebase(): {
       const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
       const rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-      if (serviceAccountJson && serviceAccountJson.trim().startsWith('{')) {
-        let parsed: Record<string, string>;
-        try {
-          parsed = JSON.parse(serviceAccountJson);
-        } catch {
-          const sanitized = serviceAccountJson
-            .trim()
-            .replace(/\r\n/g, '\\n')
-            .replace(/\n/g, '\\n')
-            .replace(/\r/g, '\\n');
-          parsed = JSON.parse(sanitized);
-        }
-        if (parsed.private_key) {
-          parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
-        }
+      const extracted = serviceAccountJson
+        ? parseServiceAccountFromEnv(serviceAccountJson)
+        : null;
+
+      if (extracted) {
         admin.initializeApp({
-          credential: admin.credential.cert(parsed),
+          credential: admin.credential.cert({
+            projectId: extracted.projectId,
+            clientEmail: extracted.clientEmail,
+            privateKey: extracted.privateKey,
+          }),
         });
       } else if (
         projectId &&
@@ -58,7 +85,7 @@ export function initFirebase(): {
         });
       } else {
         initializationError =
-          'Credenciales de Firebase Admin no configuradas. Define FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL y FIREBASE_PRIVATE_KEY en las variables de entorno del backend-api.';
+          'Credenciales de Firebase Admin no configuradas. Define FIREBASE_SERVICE_ACCOUNT_JSON en las variables de entorno del backend-api.';
         return { db: null, error: initializationError };
       }
     }
@@ -68,7 +95,9 @@ export function initFirebase(): {
     return { db: firestoreInstance, error: null };
   } catch (err) {
     const message =
-      err instanceof Error ? err.message : 'Error desconocido al inicializar Firebase Admin';
+      err instanceof Error
+        ? err.message
+        : 'Error desconocido al inicializar Firebase Admin';
     initializationError = `Error al inicializar Firebase Admin SDK: ${message}`;
     return { db: null, error: initializationError };
   }
