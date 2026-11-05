@@ -1,0 +1,25 @@
+services:
+  backend-api:
+    build:
+      context: ./backend-api
+      dockerfile: Dockerfile
+    container_name: studyroom-backend-api
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./backend-api/.env
+    environment:
+      - PORT=4000
+    restart: unless-stopped
+
+  backend-realtime:
+    build:
+      context: ./backend-realtime
+      dockerfile: Dockerfile
+    container_name: studyroom-backend-realtime
+    ports:
+      - "4001:4001"
+    environment:
+      - PORT=4001
+      - ALLOWED_ORIGIN=http://localhost:5173
+    restart: unless-stopped
