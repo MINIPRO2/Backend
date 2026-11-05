@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Build outputs
+dist/
+build/
+*/dist/
+*/build/
+
+# Environment variables & Secrets (NEVER commit credentials)
+.env
+.env.*
+!.env.example
+*/.env
+*/.env.*
+!*/*.env.example
+
+# Firebase service account keys
+*serviceAccount*.json
+*firebase-adminsdk*.json
+firebase-debug.log*
+firestore-debug.log*
+
+# Logs & OS
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
