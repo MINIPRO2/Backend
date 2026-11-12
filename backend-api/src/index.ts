@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
 import sprint0Router from './routes/sprint0.routes';
+import userRouter from './routes/user.routes';
 
 dotenv.config();
 
@@ -48,6 +49,9 @@ app.get('/api/health', (_req: Request, res: Response) => {
 // Rutas del Sprint 0 (TS-00 Base Técnica End-to-End)
 app.use('/api/sprint0', sprint0Router);
 
+// Rutas del Sprint 1 (TS-01 Identidad y Autenticación)
+app.use('/api/users', userRouter);
+
 // Ruta raíz informativa
 app.get('/', (_req: Request, res: Response) => {
   res.status(200).json({
@@ -55,6 +59,14 @@ app.get('/', (_req: Request, res: Response) => {
     status: 'online',
     docs: '/api-docs',
     sprint0Endpoint: '/api/sprint0/status',
+    sprint1Endpoints: [
+      'GET /api/users/check-username?username=...',
+      'GET /api/users/me',
+      'POST /api/users/register',
+      'POST /api/users/google-sync',
+      'PUT /api/users/username',
+      'PUT /api/users/profile',
+    ],
   });
 });
 

@@ -37,9 +37,9 @@ export class Sprint0Repository {
     if (!snapshot.exists) {
       const initialData: Omit<Sprint0StatusRecord, 'id'> = {
         appName: 'StudyRoom - Salón de Estudio Colaborativo',
-        sprint: 'Sprint 0: Fundamentación UX y Base Técnica End-to-End',
+        sprint: 'Conexión Cloud Firestore',
         message:
-          'Conexión End-to-End activa: Este dato proviene en tiempo real de Cloud Firestore a través de la API.',
+          'Conexión activa: Este dato proviene en tiempo real de Cloud Firestore a través de la API.',
         accessibilityTarget: 'WCAG 2.2 Nivel AA',
         activeRoomsCount: 3,
         updatedAt: new Date().toISOString(),

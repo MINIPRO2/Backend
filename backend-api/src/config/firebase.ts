@@ -60,10 +60,11 @@ function parseServiceAccountFromEnv(rawInput: string): {
 
 export function initFirebase(): {
   db: admin.firestore.Firestore | null;
+  auth: admin.auth.Auth | null;
   error: string | null;
 } {
-  if (firestoreInstance) {
-    return { db: firestoreInstance, error: null };
+  if (firestoreInstance && admin.apps.length > 0) {
+    return { db: firestoreInstance, auth: admin.auth(), error: null };
   }
 
   try {
@@ -105,19 +106,19 @@ export function initFirebase(): {
       } else {
         initializationError =
           'Credenciales de Firebase Admin incompletas en Render. Reemplaza el valor de FIREBASE_SERVICE_ACCOUNT_JSON en Render Environment con la cadena Base64 de una sola línea.';
-        return { db: null, error: initializationError };
+        return { db: null, auth: null, error: initializationError };
       }
     }
 
     firestoreInstance = admin.firestore();
     initializationError = null;
-    return { db: firestoreInstance, error: null };
+    return { db: firestoreInstance, auth: admin.auth(), error: null };
   } catch (err) {
     const message =
       err instanceof Error
         ? err.message
         : 'Error desconocido al inicializar Firebase Admin';
     initializationError = `Error al inicializar Firebase Admin SDK: ${message}`;
-    return { db: null, error: initializationError };
+    return { db: null, auth: null, error: initializationError };
   }
 }
